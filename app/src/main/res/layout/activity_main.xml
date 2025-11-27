@@ -20,11 +20,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:background="#80000000"
-        android:padding="8dp"
+        android:background="#99000000"
+        android:padding="12dp"
         android:text="IP: Loading..."
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
+        android:textColor="#00FF00"
+        android:textSize="18sp"
         android:textStyle="bold"
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
@@ -41,14 +41,27 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
+            android:id="@+id/badgeMode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#6200EE"
+            android:padding="6dp"
+            android:text="MODE: OBS"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:layout_marginEnd="8dp"/>
+
+        <TextView
             android:id="@+id/badgeMute"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="#D50000"
-            android:padding="4dp"
+            android:padding="6dp"
             android:text="MIC OFF"
             android:textColor="#FFFFFF"
             android:textSize="12sp"
+            android:textStyle="bold"
             android:layout_marginEnd="8dp"
             android:visibility="gone"/>
 
@@ -57,10 +70,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="#FF6D00"
-            android:padding="4dp"
+            android:padding="6dp"
             android:text="PAUSED"
             android:textColor="#FFFFFF"
             android:textSize="12sp"
+            android:textStyle="bold"
             android:visibility="gone"/>
     </LinearLayout>
 
@@ -165,6 +179,17 @@
             android:layout_marginBottom="40dp"/>
 
         <Button
+            android:id="@+id/btnReconnect"
+            android:layout_width="200dp"
+            android:layout_height="60dp"
+            android:text="RECONNECT"
+            android:backgroundTint="#4CAF50"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp"/>
+
+        <Button
             android:id="@+id/btnBackToMenu"
             android:layout_width="200dp"
             android:layout_height="60dp"
@@ -176,7 +201,7 @@
         android:id="@+id/startLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#1A1A1A"
+        android:background="#121212"
         android:gravity="center"
         android:orientation="vertical"
         android:clickable="true"
@@ -189,7 +214,7 @@
             android:textColor="#FFFFFF"
             android:textSize="32sp"
             android:textStyle="bold"
-            android:layout_marginBottom="30dp"/>
+            android:layout_marginBottom="10dp"/>
 
         <TextView
             android:id="@+id/tvUsbDebugStatus"
@@ -198,24 +223,43 @@
             android:text="Cek USB Debugging..."
             android:textColor="#AAAAAA"
             android:textSize="16sp"
-            android:layout_marginBottom="30dp"/>
-
-        <Button
-            android:id="@+id/btnStartApp"
-            android:layout_width="200dp"
-            android:layout_height="60dp"
-            android:text="MULAI SERVER"
-            android:textSize="18sp"
-            android:textStyle="bold"/>
+            android:layout_marginBottom="40dp"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Pastikan HP d PC satu jaringan\natau gunakan Kabel USB"
+            android:text="PILIH MODE START"
+            android:textColor="#00E676"
+            android:textSize="12sp"
+            android:letterSpacing="0.1"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp"/>
+
+        <Button
+            android:id="@+id/btnStartNormal"
+            android:layout_width="250dp"
+            android:layout_height="60dp"
+            android:text="Start (Biasa)"
+            android:textSize="16sp"
+            android:backgroundTint="#2196F3"
+            android:layout_marginBottom="16dp"/>
+
+        <Button
+            android:id="@+id/btnStartObs"
+            android:layout_width="250dp"
+            android:layout_height="60dp"
+            android:text="Start (Untuk OBS)"
+            android:textSize="16sp"
+            android:backgroundTint="#6200EE"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hubungkan HP d PC di jaringan yang sama\natau gunakan Kabel USB (Recommended)"
             android:textColor="#888888"
             android:textSize="12sp"
             android:gravity="center"
-            android:layout_marginTop="20dp"/>
+            android:layout_marginTop="30dp"/>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

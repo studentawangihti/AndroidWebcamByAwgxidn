@@ -58,16 +58,20 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvStatusIndicator: TextView
     private lateinit var badgeMute: TextView
     private lateinit var badgePause: TextView
+    private lateinit var badgeMode: TextView
     private lateinit var controlLayout: LinearLayout
     private lateinit var rootLayout: ConstraintLayout
     private lateinit var indicatorLayout: LinearLayout
 
     // Layouts Menu
     private lateinit var startLayout: LinearLayout
-    private lateinit var disconnectLayout: LinearLayout // BARU
+    private lateinit var disconnectLayout: LinearLayout
 
-    private lateinit var btnStartApp: Button
-    private lateinit var btnBackToMenu: Button // BARU
+    // Buttons
+    private lateinit var btnStartNormal: Button
+    private lateinit var btnStartObs: Button
+    private lateinit var btnBackToMenu: Button
+    private lateinit var btnReconnect: Button
     private lateinit var tvUsbDebugStatus: TextView
 
     // Controls
@@ -97,6 +101,9 @@ class MainActivity : AppCompatActivity() {
     private var currentResolution = Size(1280, 720)
     private var currentFpsDelay: Long = 33
 
+    // Mode Selection
+    private var selectedMode = "NORMAL"
+
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -116,12 +123,15 @@ class MainActivity : AppCompatActivity() {
         tvStatusIndicator = findViewById(R.id.tvStatusIndicator)
         badgeMute = findViewById(R.id.badgeMute)
         badgePause = findViewById(R.id.badgePause)
+        badgeMode = findViewById(R.id.badgeMode)
 
         startLayout = findViewById(R.id.startLayout)
-        disconnectLayout = findViewById(R.id.disconnectLayout) // Init
+        disconnectLayout = findViewById(R.id.disconnectLayout)
 
-        btnStartApp = findViewById(R.id.btnStartApp)
-        btnBackToMenu = findViewById(R.id.btnBackToMenu) // Init
+        btnStartNormal = findViewById(R.id.btnStartNormal)
+        btnStartObs = findViewById(R.id.btnStartObs)
+        btnBackToMenu = findViewById(R.id.btnBackToMenu)
+        btnReconnect = findViewById(R.id.btnReconnect)
         tvUsbDebugStatus = findViewById(R.id.tvUsbDebugStatus)
 
         btnPause = findViewById(R.id.btnPause)
@@ -138,31 +148,27 @@ class MainActivity : AppCompatActivity() {
 
         checkUsbStatus()
 
-        btnStartApp.setOnClickListener {
-            checkUsbStatus()
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                == PackageManager.PERMISSION_GRANTED) {
-                launchCameraSequence()
-            } else {
-                requestPermissionLauncher.launch(Manifest.permission.CAMERA)
-            }
+        btnStartNormal.setOnClickListener {
+            selectedMode = "NORMAL"
+            checkAndStart()
         }
 
-        // --- TOMBOL STOP / DISCONNECT ---
-        btnStop.setOnClickListener {
-            performDisconnect() // Panggil fungsi disconnect
+        btnStartObs.setOnClickListener {
+            selectedMode = "OBS"
+            checkAndStart()
         }
 
-        // --- TOMBOL KEMBALI KE MENU (BARU) ---
-        btnBackToMenu.setOnClickListener {
-            resetToMainMenu() // Panggil fungsi reset
+        btnStop.setOnClickListener { performDisconnect() }
+        btnBackToMenu.setOnClickListener { resetToMainMenu() }
+        btnReconnect.setOnClickListener {
+            disconnectLayout.visibility = View.GONE
+            launchCameraSequence()
         }
 
         rootLayout.setOnClickListener { showMenuAndResetTimer() }
         findViewById<PreviewView>(R.id.viewFinder).setOnClickListener { showMenuAndResetTimer() }
         setupTouchReset(controlLayout)
 
-        // Listeners Standard
         btnPause.setOnClickListener {
             resetAutoHideTimer()
             isPaused = !isPaused
@@ -228,7 +234,6 @@ class MainActivity : AppCompatActivity() {
             showSettingsMenu()
         }
 
-        // SeekBars
         sbZoom.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 resetAutoHideTimer()
@@ -283,99 +288,17 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    // --- ROTATION & ANALYSIS LOGIC ---
+    // --- Helper Functions ---
 
-    private fun startCamera() {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-        cameraProviderFuture.addListener({
-            val cameraProvider = cameraProviderFuture.get()
-            val previewView = findViewById<PreviewView>(R.id.viewFinder)
-            val preview = Preview.Builder().build()
-            preview.setSurfaceProvider(previewView.surfaceProvider)
-
-            val imageAnalysis = ImageAnalysis.Builder()
-                .setTargetResolution(currentResolution)
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build()
-
-            imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor()) { image ->
-                if (isPaused) { image.close(); return@setAnalyzer }
-
-                try {
-                    val rotationDegrees = image.imageInfo.rotationDegrees
-                    val nv21Bytes = yuvToNv21(image)
-                    val yuvImage = YuvImage(nv21Bytes, ImageFormat.NV21, image.width, image.height, null)
-                    val rawOut = ByteArrayOutputStream()
-
-                    val quality = if (image.width >= 2000) 40 else 60
-                    yuvImage.compressToJpeg(Rect(0, 0, image.width, image.height), quality, rawOut)
-                    val rawJpeg = rawOut.toByteArray()
-
-                    val finalBytes = if (rotationDegrees != 0) {
-                        val bitmap = BitmapFactory.decodeByteArray(rawJpeg, 0, rawJpeg.size)
-                        val matrix = Matrix()
-                        matrix.postRotate(rotationDegrees.toFloat())
-
-                        val rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-                        val rotatedOut = ByteArrayOutputStream()
-                        rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, quality, rotatedOut)
-
-                        bitmap.recycle()
-                        rotatedBitmap.recycle()
-                        rotatedOut.toByteArray()
-                    } else {
-                        rawJpeg
-                    }
-                    server.pushImage(finalBytes)
-                } catch (e: Exception) { e.printStackTrace() } finally { image.close() }
-            }
-            try {
-                cameraProvider.unbindAll()
-                camera = cameraProvider.bindToLifecycle(this, currentCameraSelector, preview, imageAnalysis)
-            } catch (e: Exception) { Log.e("Camera", "Gagal bind kamera", e) }
-        }, ContextCompat.getMainExecutor(this))
-    }
-
-    // --- FUNGSI RESET & DISCONNECT ---
-
-    private fun performDisconnect() {
-        // 1. Matikan Server & Kamera
-        if (::server.isInitialized) server.stop()
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-        cameraProviderFuture.addListener({
-            val cameraProvider = cameraProviderFuture.get()
-            cameraProvider.unbindAll()
-        }, ContextCompat.getMainExecutor(this))
-
-        // 2. Tampilkan Layar Disconnect
-        controlLayout.visibility = View.GONE
-        indicatorLayout.visibility = View.GONE
-        tvIpInfo.visibility = View.GONE
-        disconnectLayout.visibility = View.VISIBLE // Tampil layar merah
-    }
-
-    private fun resetToMainMenu() {
-        // 1. Reset Semua UI ke kondisi awal
-        disconnectLayout.visibility = View.GONE
-        startLayout.visibility = View.VISIBLE
-
-        // 2. Reset Variabel
-        isPaused = false
-        isMuted = false
-        isFlashOn = false
-        isManualFocus = false
-        isManualExposure = false
-        btnPause.text = "Pause"
-        btnMute.text = "Mute"
-        btnFlash.text = "Flash Off"
-        badgePause.visibility = View.GONE
-        badgeMute.visibility = View.GONE
-
-        // 3. Cek ulang USB
+    private fun checkAndStart() {
         checkUsbStatus()
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+            == PackageManager.PERMISSION_GRANTED) {
+            launchCameraSequence()
+        } else {
+            requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
     }
-
-    // --- Helper Lainnya ---
 
     private fun checkUsbStatus() {
         val adb = Settings.Global.getInt(contentResolver, Settings.Global.ADB_ENABLED, 0)
@@ -388,11 +311,50 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun performDisconnect() {
+        if (::server.isInitialized) server.stop()
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener({
+            val cameraProvider = cameraProviderFuture.get()
+            cameraProvider.unbindAll()
+        }, ContextCompat.getMainExecutor(this))
+
+        controlLayout.visibility = View.GONE
+        indicatorLayout.visibility = View.GONE
+        tvIpInfo.visibility = View.GONE
+        disconnectLayout.visibility = View.VISIBLE
+    }
+
+    private fun resetToMainMenu() {
+        disconnectLayout.visibility = View.GONE
+        startLayout.visibility = View.VISIBLE
+
+        isPaused = false
+        isMuted = false
+        isFlashOn = false
+        isManualFocus = false
+        isManualExposure = false
+        btnPause.text = "Pause"
+        btnMute.text = "Mute"
+        btnFlash.text = "Flash Off"
+        badgePause.visibility = View.GONE
+        badgeMute.visibility = View.GONE
+
+        checkUsbStatus()
+    }
+
     private fun launchCameraSequence() {
         startLayout.visibility = View.GONE
+        disconnectLayout.visibility = View.GONE
+
         controlLayout.visibility = View.VISIBLE
         indicatorLayout.visibility = View.VISIBLE
         tvIpInfo.visibility = View.VISIBLE
+
+        badgeMode.text = "MODE: $selectedMode"
+        if (selectedMode == "OBS") badgeMode.setBackgroundColor(0xFF6200EE.toInt())
+        else badgeMode.setBackgroundColor(0xFF2196F3.toInt())
+
         startCameraAndServer()
         resetAutoHideTimer()
     }
@@ -530,10 +492,69 @@ class MainActivity : AppCompatActivity() {
         try {
             server.start()
             val ip = getIpAddress()
-            tvIpInfo.text = "Server IP: http://$ip:8080"
+
+            if (selectedMode == "OBS") {
+                tvIpInfo.text = "OBS Link: http://$ip:8080/obs"
+                tvIpInfo.setTextColor(0xFFB388FF.toInt())
+            } else {
+                tvIpInfo.text = "Browser Link: http://$ip:8080"
+                tvIpInfo.setTextColor(0xFF00E676.toInt())
+            }
+
         } catch (e: Exception) {
             tvIpInfo.text = "Error Server: ${e.message}"
         }
+    }
+
+    private fun startCamera() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener({
+            val cameraProvider = cameraProviderFuture.get()
+            val previewView = findViewById<PreviewView>(R.id.viewFinder)
+            val preview = Preview.Builder().build()
+            preview.setSurfaceProvider(previewView.surfaceProvider)
+
+            val imageAnalysis = ImageAnalysis.Builder()
+                .setTargetResolution(currentResolution)
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build()
+
+            imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor()) { image ->
+                if (isPaused) { image.close(); return@setAnalyzer }
+
+                try {
+                    val rotationDegrees = image.imageInfo.rotationDegrees
+                    val nv21Bytes = yuvToNv21(image)
+                    val yuvImage = YuvImage(nv21Bytes, ImageFormat.NV21, image.width, image.height, null)
+                    val rawOut = ByteArrayOutputStream()
+
+                    val quality = if (image.width >= 2000) 40 else 60
+                    yuvImage.compressToJpeg(Rect(0, 0, image.width, image.height), quality, rawOut)
+                    val rawJpeg = rawOut.toByteArray()
+
+                    val finalBytes = if (rotationDegrees != 0) {
+                        val bitmap = BitmapFactory.decodeByteArray(rawJpeg, 0, rawJpeg.size)
+                        val matrix = Matrix()
+                        matrix.postRotate(rotationDegrees.toFloat())
+
+                        val rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+                        val rotatedOut = ByteArrayOutputStream()
+                        rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, quality, rotatedOut)
+
+                        bitmap.recycle()
+                        rotatedBitmap.recycle()
+                        rotatedOut.toByteArray()
+                    } else {
+                        rawJpeg
+                    }
+                    server.pushImage(finalBytes)
+                } catch (e: Exception) { e.printStackTrace() } finally { image.close() }
+            }
+            try {
+                cameraProvider.unbindAll()
+                camera = cameraProvider.bindToLifecycle(this, currentCameraSelector, preview, imageAnalysis)
+            } catch (e: Exception) { Log.e("Camera", "Gagal bind kamera", e) }
+        }, ContextCompat.getMainExecutor(this))
     }
 
     private fun yuvToNv21(image: ImageProxy): ByteArray {
@@ -581,12 +602,32 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // --- SERVER LOGIC (FIXED) ---
     inner class MjpegServer(port: Int) : NanoHTTPD(port) {
         @Volatile private var currentFrame: ByteArray? = null
         fun pushImage(image: ByteArray) { currentFrame = image }
 
         override fun serve(session: IHTTPSession): Response {
-            return newChunkedResponse(Response.Status.OK, "multipart/x-mixed-replace; boundary=--myboundary", MjpegInputStream())
+            val uri = session.uri
+
+            if (uri == "/stream") {
+                return newChunkedResponse(Response.Status.OK, "multipart/x-mixed-replace; boundary=--myboundary", MjpegInputStream())
+            }
+            else if (uri == "/ping") {
+                return newFixedLengthResponse(Response.Status.OK, "text/plain", "pong")
+            }
+            else if (uri == "/obs") {
+                val html = """
+                    <html><head><title>OBS Stream</title><style>body,html{margin:0;padding:0;width:100%;height:100%;background-color:#000;overflow:hidden;}img{width:100%;height:100%;object-fit:contain;display:block;}</style></head><body><img id="cam"/><script>const img=document.getElementById('cam');function loadStream(){img.src="/stream?t="+new Date().getTime();}img.onerror=function(){setTimeout(loadStream,500);};setInterval(function(){fetch('/ping').then(res=>{if(!res.ok)throw new Error('Server mati');}).catch(err=>{if(!(img.complete&&img.naturalWidth!==0)){loadStream();}});},2000);loadStream();</script></body></html>
+                """.trimIndent()
+                return newFixedLengthResponse(Response.Status.OK, "text/html", html)
+            }
+            else {
+                val html = """
+                    <html><head><title>Android Webcam</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{background:#121212;color:white;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0}h1{margin-bottom:20px}img{max-width:95%;border:2px solid #333;border-radius:8px;box-shadow:0 0 20px rgba(0,0,0,0.5)}.info{margin-top:20px;color:#888}</style></head><body><h1>Android Webcam View</h1><iframe src="/obs" width="640" height="480" style="border:none;max-width:100%"></iframe><p class="info">Mode Biasa</p></body></html>
+                """.trimIndent()
+                return newFixedLengthResponse(Response.Status.OK, "text/html", html)
+            }
         }
 
         private inner class MjpegInputStream : InputStream() {
@@ -608,22 +649,34 @@ class MainActivity : AppCompatActivity() {
                 return toCopy
             }
 
+            // FUNGSI INI SUDAH DIPERBAIKI SECARA PERMANEN
             private fun loadNextFrame() {
-                var localFrame = currentFrame
-                while (localFrame == null) {
-                    try { Thread.sleep(10) } catch (e: InterruptedException) {}
-                    localFrame = currentFrame
+                var dataGambar = currentFrame
+
+                // Tunggu sampai frame tersedia
+                while (dataGambar == null) {
+                    try {
+                        Thread.sleep(10)
+                    } catch (e: InterruptedException) {
+                        return // Exit jika interrupted
+                    }
+                    dataGambar = currentFrame
                 }
-                val finalFrame = localFrame!!
-                val header = "--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: ${finalFrame.size}\r\n\r\n"
+
+                // Sekarang 'dataGambar' pasti tidak null
+                val finalData = dataGambar
+
+                val header = "--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: ${finalData.size}\r\n\r\n"
                 val out = ByteArrayOutputStream()
                 try {
                     out.write(header.toByteArray())
-                    out.write(finalFrame)
+                    out.write(finalData)
                     out.write("\r\n".toByteArray())
                 } catch (e: Exception) { }
+
                 buffer = out.toByteArray()
                 index = 0
+
                 try { Thread.sleep(currentFpsDelay) } catch (e: Exception) {}
             }
         }
