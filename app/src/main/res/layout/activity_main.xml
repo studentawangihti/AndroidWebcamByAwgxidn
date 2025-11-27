@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clickable="true"
+    android:focusable="true"
+    tools:context=".MainActivity">
+
+    <androidx.camera.view.PreviewView
+        android:id="@+id/viewFinder"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <TextView
+        android:id="@+id/tvIpAddress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:background="#80000000"
+        android:padding="8dp"
+        android:text="IP: Loading..."
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/indicatorLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_margin="16dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/badgeMute"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#D50000"
+            android:padding="4dp"
+            android:text="MIC OFF"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:layout_marginEnd="8dp"
+            android:visibility="gone"/>
+
+        <TextView
+            android:id="@+id/badgePause"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#FF6D00"
+            android:padding="4dp"
+            android:text="PAUSED"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:visibility="gone"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvStatusIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#99000000"
+        android:padding="12dp"
+        android:text="Status"
+        android:textColor="#FFFFFF"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/controlLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#DD000000"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <Button android:id="@+id/btnFocusMode" android:layout_width="80dp" android:layout_height="40dp" android:textSize="9sp" android:text="Focus: Auto" />
+                <Button android:id="@+id/btnExposureMode" android:layout_width="80dp" android:layout_height="40dp" android:textSize="9sp" android:text="Exp: Auto" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="8dp">
+                <SeekBar android:id="@+id/seekBarFocus" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:visibility="gone" />
+                <SeekBar android:id="@+id/seekBarExposure" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="50" android:visibility="gone" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Zoom" android:textColor="#FFFFFF" android:textSize="10sp" android:layout_gravity="center"/>
+                <SeekBar android:id="@+id/seekBarZoom" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <Button android:id="@+id/btnPause" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Pause" android:layout_marginEnd="4dp"/>
+                <Button android:id="@+id/btnMute" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Mute" android:layout_marginEnd="4dp"/>
+                <Button android:id="@+id/btnSwitch" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Flip" android:layout_marginEnd="4dp"/>
+                <Button android:id="@+id/btnFlash" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Flash" android:layout_marginEnd="4dp"/>
+                <Button android:id="@+id/btnSettings" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="⚙ Res" android:layout_marginEnd="4dp"/>
+                <Button android:id="@+id/btnStop" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Disconnect" android:backgroundTint="#D32F2F" android:textColor="#FFFFFF"/>
+            </LinearLayout>
+        </HorizontalScrollView>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/disconnectLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#CC000000"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="true">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="KAMERA TERPUTUS"
+            android:textColor="#FF5252"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="20dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Server dimatikan."
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:layout_marginBottom="40dp"/>
+
+        <Button
+            android:id="@+id/btnBackToMenu"
+            android:layout_width="200dp"
+            android:layout_height="60dp"
+            android:text="KEMBALI KE MENU"
+            android:textSize="16sp"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/startLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#1A1A1A"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:clickable="true"
+        android:focusable="true">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ANDROID WEBCAM"
+            android:textColor="#FFFFFF"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="30dp"/>
+
+        <TextView
+            android:id="@+id/tvUsbDebugStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cek USB Debugging..."
+            android:textColor="#AAAAAA"
+            android:textSize="16sp"
+            android:layout_marginBottom="30dp"/>
+
+        <Button
+            android:id="@+id/btnStartApp"
+            android:layout_width="200dp"
+            android:layout_height="60dp"
+            android:text="MULAI SERVER"
+            android:textSize="18sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pastikan HP d PC satu jaringan\natau gunakan Kabel USB"
+            android:textColor="#888888"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:layout_marginTop="20dp"/>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
