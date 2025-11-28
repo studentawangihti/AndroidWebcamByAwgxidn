@@ -6,6 +6,7 @@
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#050608"
     android:clickable="true"
     android:focusable="true"
     tools:context=".MainActivity">
@@ -13,29 +14,34 @@
     <androidx.camera.view.PreviewView
         android:id="@+id/viewFinder"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        app:scaleType="fillCenter" />
 
+    <!-- IP ADDRESS BADGE -->
     <TextView
         android:id="@+id/tvIpAddress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:background="#99000000"
-        android:padding="12dp"
+        android:background="@drawable/badge_ip"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp"
         android:text="IP: Loading..."
-        android:textColor="#00FF00"
-        android:textSize="18sp"
-        android:textStyle="bold"
+        android:textColor="#C5F7E5"
+        android:textSize="13sp"
+        android:fontFamily="sans-serif-medium"
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- BADGE INDICATORS (MODE, MUTE, PAUSE) -->
     <LinearLayout
         android:id="@+id/indicatorLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:layout_margin="16dp"
+        android:gravity="end"
+        android:orientation="vertical"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -44,222 +50,450 @@
             android:id="@+id/badgeMode"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="#6200EE"
-            android:padding="6dp"
+            android:layout_marginBottom="6dp"
+            android:background="@drawable/badge_mode"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="6dp"
             android:text="MODE: OBS"
             android:textColor="#FFFFFF"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:layout_marginEnd="8dp"/>
+            android:textSize="11sp"
+            android:fontFamily="sans-serif-medium" />
 
         <TextView
             android:id="@+id/badgeMute"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="#D50000"
-            android:padding="6dp"
+            android:layout_marginBottom="6dp"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="6dp"
             android:text="MIC OFF"
             android:textColor="#FFFFFF"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:layout_marginEnd="8dp"
-            android:visibility="gone"/>
+            android:textSize="11sp"
+            android:fontFamily="sans-serif-medium"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/badgePause"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="#FF6D00"
-            android:padding="6dp"
+            android:background="@drawable/badge_alert_orange"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="6dp"
             android:text="PAUSED"
             android:textColor="#FFFFFF"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:visibility="gone"/>
+            android:textSize="11sp"
+            android:fontFamily="sans-serif-medium"
+            android:visibility="gone" />
     </LinearLayout>
 
+    <!-- FLOATING STATUS CENTER -->
     <TextView
         android:id="@+id/tvStatusIndicator"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="#99000000"
-        android:padding="12dp"
+        android:background="@drawable/status_floating"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="12dp"
         android:text="Status"
         android:textColor="#FFFFFF"
-        android:textSize="24sp"
-        android:textStyle="bold"
+        android:textSize="18sp"
+        android:fontFamily="sans-serif-medium"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- BOTTOM CONTROL PANEL -->
     <LinearLayout
         android:id="@+id/controlLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#DD000000"
+        android:background="@drawable/panel_glass"
         android:orientation="vertical"
-        android:padding="12dp"
+        android:paddingBottom="12dp"
+        android:paddingEnd="12dp"
+        android:paddingStart="12dp"
+        android:paddingTop="12dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent">
 
+        <!-- SECTION TITLE: IMAGE CONTROL -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:layout_marginStart="4dp"
+            android:letterSpacing="0.08"
+            android:text="IMAGE CONTROL"
+            android:textColor="#9AA0A6"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium" />
+
+        <!-- FOCUS ROW -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_marginBottom="6dp"
             android:gravity="center_vertical"
-            android:layout_marginBottom="8dp">
+            android:orientation="horizontal">
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-                <Button android:id="@+id/btnFocusMode" android:layout_width="80dp" android:layout_height="40dp" android:textSize="9sp" android:text="Focus: Auto" />
-                <Button android:id="@+id/btnExposureMode" android:layout_width="80dp" android:layout_height="40dp" android:textSize="9sp" android:text="Exp: Auto" />
-            </LinearLayout>
+            <Button
+                android:id="@+id/btnFocusMode"
+                android:layout_width="92dp"
+                android:layout_height="36dp"
+                android:background="@drawable/btn_chip"
+                android:insetBottom="0dp"
+                android:insetTop="0dp"
+                android:paddingHorizontal="12dp"
+                android:text="Focus: Auto"
+                android:textAllCaps="false"
+                android:textSize="11sp"
+                android:textColor="#E3E3E3"
+                android:fontFamily="sans-serif-medium" />
 
-            <LinearLayout
+            <SeekBar
+                android:id="@+id/seekBarFocus"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
                 android:layout_weight="1"
-                android:orientation="vertical"
-                android:layout_marginStart="8dp">
-                <SeekBar android:id="@+id/seekBarFocus" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:visibility="gone" />
-                <SeekBar android:id="@+id/seekBarExposure" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="50" android:visibility="gone" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Zoom" android:textColor="#FFFFFF" android:textSize="10sp" android:layout_gravity="center"/>
-                <SeekBar android:id="@+id/seekBarZoom" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0" />
-            </LinearLayout>
+                android:max="100"
+                android:visibility="gone"
+                android:progressDrawable="@drawable/seekbar_track"
+                android:thumb="@drawable/seekbar_thumb"
+                android:thumbOffset="8dp" />
         </LinearLayout>
 
+        <!-- EXPOSURE ROW -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnExposureMode"
+                android:layout_width="92dp"
+                android:layout_height="36dp"
+                android:background="@drawable/btn_chip"
+                android:insetBottom="0dp"
+                android:insetTop="0dp"
+                android:paddingHorizontal="12dp"
+                android:text="Exp: Auto"
+                android:textAllCaps="false"
+                android:textSize="11sp"
+                android:textColor="#E3E3E3"
+                android:fontFamily="sans-serif-medium" />
+
+            <SeekBar
+                android:id="@+id/seekBarExposure"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:max="100"
+                android:progress="50"
+                android:visibility="gone"
+                android:progressDrawable="@drawable/seekbar_track"
+                android:thumb="@drawable/seekbar_thumb"
+                android:thumbOffset="8dp" />
+        </LinearLayout>
+
+        <!-- ZOOM ROW -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="14dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="92dp"
+                android:layout_height="wrap_content"
+                android:text="ZOOM"
+                android:textAlignment="center"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium" />
+
+            <SeekBar
+                android:id="@+id/seekBarZoom"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:max="100"
+                android:progress="0"
+                android:progressDrawable="@drawable/seekbar_track"
+                android:thumb="@drawable/seekbar_thumb"
+                android:thumbOffset="8dp" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginBottom="10dp"
+            android:background="#262B33" />
+
+        <!-- SECTION TITLE: ACTIONS -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"
+            android:layout_marginStart="4dp"
+            android:letterSpacing="0.08"
+            android:text="ACTIONS"
+            android:textColor="#9AA0A6"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium" />
+
+        <!-- ACTION BUTTONS -->
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:scrollbars="none">
+
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
-                <Button android:id="@+id/btnPause" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Pause" android:layout_marginEnd="4dp"/>
-                <Button android:id="@+id/btnMute" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Mute" android:layout_marginEnd="4dp"/>
-                <Button android:id="@+id/btnSwitch" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Flip" android:layout_marginEnd="4dp"/>
-                <Button android:id="@+id/btnFlash" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Flash" android:layout_marginEnd="4dp"/>
-                <Button android:id="@+id/btnSettings" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="⚙ Res" android:layout_marginEnd="4dp"/>
-                <Button android:id="@+id/btnStop" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Disconnect" android:backgroundTint="#D32F2F" android:textColor="#FFFFFF"/>
+
+                <Button
+                    android:id="@+id/btnPause"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/btn_modern_secondary"
+                    android:paddingHorizontal="18dp"
+                    android:text="Pause"
+                    android:textAllCaps="false"
+                    android:textColor="#EDEDED"
+                    android:textSize="13sp"
+                    android:fontFamily="sans-serif-medium" />
+
+                <Button
+                    android:id="@+id/btnMute"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/btn_modern_secondary"
+                    android:paddingHorizontal="18dp"
+                    android:text="Mute"
+                    android:textAllCaps="false"
+                    android:textColor="#EDEDED"
+                    android:textSize="13sp"
+                    android:fontFamily="sans-serif-medium" />
+
+                <Button
+                    android:id="@+id/btnSwitch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/btn_modern_secondary"
+                    android:paddingHorizontal="18dp"
+                    android:text="Flip"
+                    android:textAllCaps="false"
+                    android:textColor="#EDEDED"
+                    android:textSize="13sp"
+                    android:fontFamily="sans-serif-medium" />
+
+                <Button
+                    android:id="@+id/btnFlash"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/btn_modern_secondary"
+                    android:paddingHorizontal="18dp"
+                    android:text="Flash"
+                    android:textAllCaps="false"
+                    android:textColor="#EDEDED"
+                    android:textSize="13sp"
+                    android:fontFamily="sans-serif-medium" />
+
+                <Button
+                    android:id="@+id/btnSettings"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/btn_modern_primary"
+                    android:paddingHorizontal="18dp"
+                    android:text="⚙ Res"
+                    android:textAllCaps="false"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp"
+                    android:fontFamily="sans-serif-medium" />
+
+                <Button
+                    android:id="@+id/btnLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/btn_modern_accent"
+                    android:paddingHorizontal="18dp"
+                    android:text="⛶ Layout"
+                    android:textAllCaps="false"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp"
+                    android:fontFamily="sans-serif-medium" />
+
+                <Button
+                    android:id="@+id/btnStop"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:background="@drawable/btn_modern_danger"
+                    android:paddingHorizontal="22dp"
+                    android:text="Stop"
+                    android:textAllCaps="false"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp"
+                    android:fontFamily="sans-serif-medium" />
             </LinearLayout>
         </HorizontalScrollView>
     </LinearLayout>
 
+    <!-- DISCONNECT OVERLAY -->
     <LinearLayout
         android:id="@+id/disconnectLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#CC000000"
+        android:background="#CC050608"
+        android:clickable="true"
+        android:focusable="true"
         android:gravity="center"
         android:orientation="vertical"
-        android:visibility="gone"
-        android:clickable="true"
-        android:focusable="true">
+        android:visibility="gone">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="14dp"
             android:text="KAMERA TERPUTUS"
-            android:textColor="#FF5252"
-            android:textSize="28sp"
+            android:textColor="#FF6B6B"
+            android:textSize="26sp"
             android:textStyle="bold"
-            android:layout_marginBottom="20dp"/>
+            android:fontFamily="sans-serif-medium" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="28dp"
             android:text="Server dimatikan."
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:layout_marginBottom="40dp"/>
+            android:textColor="#ECECEC"
+            android:textSize="15sp"
+            android:fontFamily="sans-serif" />
 
         <Button
             android:id="@+id/btnReconnect"
-            android:layout_width="200dp"
-            android:layout_height="60dp"
+            android:layout_width="220dp"
+            android:layout_height="52dp"
+            android:layout_marginBottom="14dp"
+            android:background="@drawable/btn_modern_primary"
             android:text="RECONNECT"
-            android:backgroundTint="#4CAF50"
+            android:textAllCaps="true"
             android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp"/>
+            android:textSize="15sp"
+            android:fontFamily="sans-serif-medium" />
 
         <Button
             android:id="@+id/btnBackToMenu"
-            android:layout_width="200dp"
-            android:layout_height="60dp"
+            android:layout_width="220dp"
+            android:layout_height="52dp"
+            android:background="@drawable/btn_modern_secondary"
             android:text="KEMBALI KE MENU"
-            android:textSize="16sp"/>
+            android:textAllCaps="true"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:fontFamily="sans-serif-medium" />
     </LinearLayout>
 
+    <!-- START MENU -->
     <LinearLayout
         android:id="@+id/startLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#121212"
-        android:gravity="center"
-        android:orientation="vertical"
+        android:background="#070A0F"
         android:clickable="true"
-        android:focusable="true">
+        android:focusable="true"
+        android:gravity="center"
+        android:orientation="vertical">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
             android:text="ANDROID WEBCAM"
             android:textColor="#FFFFFF"
-            android:textSize="32sp"
+            android:textSize="26sp"
             android:textStyle="bold"
-            android:layout_marginBottom="10dp"/>
+            android:fontFamily="sans-serif-medium" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="28dp"
+            android:text="by Awgxidn"
+            android:textColor="#8AB4F8"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif-medium" />
 
         <TextView
             android:id="@+id/tvUsbDebugStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="36dp"
             android:text="Cek USB Debugging..."
-            android:textColor="#AAAAAA"
-            android:textSize="16sp"
-            android:layout_marginBottom="40dp"/>
+            android:textColor="#B0BEC5"
+            android:textSize="15sp"
+            android:fontFamily="sans-serif" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="18dp"
+            android:letterSpacing="0.08"
             android:text="PILIH MODE START"
             android:textColor="#00E676"
             android:textSize="12sp"
-            android:letterSpacing="0.1"
             android:textStyle="bold"
-            android:layout_marginBottom="16dp"/>
+            android:fontFamily="sans-serif-medium" />
 
         <Button
             android:id="@+id/btnStartNormal"
-            android:layout_width="250dp"
-            android:layout_height="60dp"
+            android:layout_width="260dp"
+            android:layout_height="56dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/btn_modern_primary"
             android:text="Start (Biasa)"
-            android:textSize="16sp"
-            android:backgroundTint="#2196F3"
-            android:layout_marginBottom="16dp"/>
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="17sp"
+            android:fontFamily="sans-serif-medium" />
 
         <Button
             android:id="@+id/btnStartObs"
-            android:layout_width="250dp"
-            android:layout_height="60dp"
+            android:layout_width="260dp"
+            android:layout_height="56dp"
+            android:background="@drawable/btn_modern_accent"
             android:text="Start (Untuk OBS)"
-            android:textSize="16sp"
-            android:backgroundTint="#6200EE"/>
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="17sp"
+            android:fontFamily="sans-serif-medium" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Hubungkan HP d PC di jaringan yang sama\natau gunakan Kabel USB (Recommended)"
-            android:textColor="#888888"
-            android:textSize="12sp"
+            android:layout_marginTop="26dp"
             android:gravity="center"
-            android:layout_marginTop="30dp"/>
+            android:text="Hubungkan HP dan PC di jaringan yang sama\natau gunakan Kabel USB (Recommended)"
+            android:textColor="#8C939E"
+            android:textSize="12sp"
+            android:fontFamily="sans-serif" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

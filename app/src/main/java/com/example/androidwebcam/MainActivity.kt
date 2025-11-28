@@ -1,7 +1,6 @@
 package com.example.androidwebcam
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -10,8 +9,6 @@ import android.graphics.Matrix
 import android.graphics.Rect
 import android.graphics.YuvImage
 import android.hardware.camera2.CaptureRequest
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -40,6 +37,7 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet // PENTING: Untuk pindah posisi
 import androidx.core.content.ContextCompat
 import fi.iki.elonen.NanoHTTPD
 import java.io.ByteArrayOutputStream
@@ -80,6 +78,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnSwitch: Button
     private lateinit var btnFlash: Button
     private lateinit var btnSettings: Button
+    private lateinit var btnLayout: Button // TOMBOL BARU
     private lateinit var btnStop: Button
     private lateinit var sbZoom: SeekBar
     private lateinit var btnFocusMode: Button
@@ -100,8 +99,6 @@ class MainActivity : AppCompatActivity() {
     private var isManualExposure = false
     private var currentResolution = Size(1280, 720)
     private var currentFpsDelay: Long = 33
-
-    // Mode Selection
     private var selectedMode = "NORMAL"
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -114,6 +111,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        hideSystemUI()
 
         // Init UI
         rootLayout = findViewById(R.id.rootLayout)
@@ -139,6 +138,7 @@ class MainActivity : AppCompatActivity() {
         btnSwitch = findViewById(R.id.btnSwitch)
         btnFlash = findViewById(R.id.btnFlash)
         btnSettings = findViewById(R.id.btnSettings)
+        btnLayout = findViewById(R.id.btnLayout) // INIT TOMBOL BARU
         btnStop = findViewById(R.id.btnStop)
         sbZoom = findViewById(R.id.seekBarZoom)
         btnFocusMode = findViewById(R.id.btnFocusMode)
@@ -165,10 +165,94 @@ class MainActivity : AppCompatActivity() {
             launchCameraSequence()
         }
 
-        rootLayout.setOnClickListener { showMenuAndResetTimer() }
-        findViewById<PreviewView>(R.id.viewFinder).setOnClickListener { showMenuAndResetTimer() }
+        // --- LAYOUT SETTINGS (POSISI) ---
+        btnLayout.setOnClickListener {
+            resetAutoHideTimer()
+            showLayoutMenu()
+        }
+
+        rootLayout.setOnClickListener {
+            showMenuAndResetTimer()
+            hideSystemUI()
+        }
+        findViewById<PreviewView>(R.id.viewFinder).setOnClickListener {
+            showMenuAndResetTimer()
+            hideSystemUI()
+        }
+
         setupTouchReset(controlLayout)
 
+        // Setup Listeners Lainnya (Sama seperti sebelumnya)
+        setupStandardListeners()
+    }
+
+    // --- FUNGSI GANTI POSISI LAYOUT ---
+    private fun showLayoutMenu() {
+        val popup = PopupMenu(this, btnLayout)
+        popup.menu.add(0, 1, 0, "⬇ Bawah (Default)")
+        popup.menu.add(0, 2, 1, "➡ Kanan")
+        popup.menu.add(0, 3, 2, "⬅ Kiri")
+
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                1 -> moveControlPanel("BOTTOM")
+                2 -> moveControlPanel("RIGHT")
+                3 -> moveControlPanel("LEFT")
+            }
+            true
+        }
+        popup.show()
+    }
+
+    private fun moveControlPanel(position: String) {
+        val constraintSet = ConstraintSet()
+        constraintSet.clone(rootLayout)
+
+        // Reset constraint lama kontrol layout
+        constraintSet.clear(R.id.controlLayout, ConstraintSet.TOP)
+        constraintSet.clear(R.id.controlLayout, ConstraintSet.BOTTOM)
+        constraintSet.clear(R.id.controlLayout, ConstraintSet.START)
+        constraintSet.clear(R.id.controlLayout, ConstraintSet.END)
+
+        when (position) {
+            "BOTTOM" -> {
+                // Tempel ke Bawah, Lebar Penuh
+                constraintSet.connect(R.id.controlLayout, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+                constraintSet.connect(R.id.controlLayout, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
+                constraintSet.connect(R.id.controlLayout, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
+
+                constraintSet.constrainWidth(R.id.controlLayout, ConstraintSet.MATCH_CONSTRAINT) // Match Parent
+                constraintSet.constrainHeight(R.id.controlLayout, ConstraintSet.WRAP_CONTENT)
+            }
+            "RIGHT" -> {
+                // Tempel ke Kanan, Tinggi Penuh, Lebar Terbatas
+                constraintSet.connect(R.id.controlLayout, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
+                constraintSet.connect(R.id.controlLayout, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+                constraintSet.connect(R.id.controlLayout, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+
+                // Ubah ukuran agar pas di samping (sekitar 320dp)
+                constraintSet.constrainWidth(R.id.controlLayout, 850) // dalam pixel (kira-kira 300dp)
+                constraintSet.constrainHeight(R.id.controlLayout, ConstraintSet.MATCH_CONSTRAINT)
+            }
+            "LEFT" -> {
+                // Tempel ke Kiri, Tinggi Penuh
+                constraintSet.connect(R.id.controlLayout, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
+                constraintSet.connect(R.id.controlLayout, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+                constraintSet.connect(R.id.controlLayout, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+
+                constraintSet.constrainWidth(R.id.controlLayout, 850)
+                constraintSet.constrainHeight(R.id.controlLayout, ConstraintSet.MATCH_CONSTRAINT)
+            }
+        }
+
+        // Terapkan animasi perubahan layout
+        // TransitionManager.beginDelayedTransition(rootLayout) // Opsional: Animasi halus
+        constraintSet.applyTo(rootLayout)
+
+        showStatus("Layout: $position")
+    }
+
+    private fun setupStandardListeners() {
         btnPause.setOnClickListener {
             resetAutoHideTimer()
             isPaused = !isPaused
@@ -288,6 +372,20 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+    private fun hideSystemUI() {
+        window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_FULLSCREEN)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        hideSystemUI()
+    }
+
     // --- Helper Functions ---
 
     private fun checkAndStart() {
@@ -357,6 +455,7 @@ class MainActivity : AppCompatActivity() {
 
         startCameraAndServer()
         resetAutoHideTimer()
+        hideSystemUI()
     }
 
     private fun showSettingsMenu() {
@@ -521,7 +620,6 @@ class MainActivity : AppCompatActivity() {
 
             imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor()) { image ->
                 if (isPaused) { image.close(); return@setAnalyzer }
-
                 try {
                     val rotationDegrees = image.imageInfo.rotationDegrees
                     val nv21Bytes = yuvToNv21(image)
@@ -536,11 +634,9 @@ class MainActivity : AppCompatActivity() {
                         val bitmap = BitmapFactory.decodeByteArray(rawJpeg, 0, rawJpeg.size)
                         val matrix = Matrix()
                         matrix.postRotate(rotationDegrees.toFloat())
-
                         val rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
                         val rotatedOut = ByteArrayOutputStream()
                         rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, quality, rotatedOut)
-
                         bitmap.recycle()
                         rotatedBitmap.recycle()
                         rotatedOut.toByteArray()
@@ -602,7 +698,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // --- SERVER LOGIC (FIXED) ---
     inner class MjpegServer(port: Int) : NanoHTTPD(port) {
         @Volatile private var currentFrame: ByteArray? = null
         fun pushImage(image: ByteArray) { currentFrame = image }
@@ -618,13 +713,13 @@ class MainActivity : AppCompatActivity() {
             }
             else if (uri == "/obs") {
                 val html = """
-                    <html><head><title>OBS Stream</title><style>body,html{margin:0;padding:0;width:100%;height:100%;background-color:#000;overflow:hidden;}img{width:100%;height:100%;object-fit:contain;display:block;}</style></head><body><img id="cam"/><script>const img=document.getElementById('cam');function loadStream(){img.src="/stream?t="+new Date().getTime();}img.onerror=function(){setTimeout(loadStream,500);};setInterval(function(){fetch('/ping').then(res=>{if(!res.ok)throw new Error('Server mati');}).catch(err=>{if(!(img.complete&&img.naturalWidth!==0)){loadStream();}});},2000);loadStream();</script></body></html>
+                    <html><head><title>OBS Stream Fixed</title><style>body,html{margin:0;padding:0;background-color:#000;overflow:hidden;}img{width:1920px;height:1080px;display:block;position:absolute;top:0;left:0;}</style></head><body><img id="cam"/><script>const img=document.getElementById('cam');function loadStream(){img.src="/stream?t="+new Date().getTime();}img.onerror=function(){setTimeout(loadStream,500);};setInterval(function(){fetch('/ping').then(res=>{if(!res.ok)throw new Error();}).catch(err=>{if(!(img.complete&&img.naturalWidth!==0))loadStream();});},2000);loadStream();</script></body></html>
                 """.trimIndent()
                 return newFixedLengthResponse(Response.Status.OK, "text/html", html)
             }
             else {
                 val html = """
-                    <html><head><title>Android Webcam</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{background:#121212;color:white;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0}h1{margin-bottom:20px}img{max-width:95%;border:2px solid #333;border-radius:8px;box-shadow:0 0 20px rgba(0,0,0,0.5)}.info{margin-top:20px;color:#888}</style></head><body><h1>Android Webcam View</h1><iframe src="/obs" width="640" height="480" style="border:none;max-width:100%"></iframe><p class="info">Mode Biasa</p></body></html>
+                    <html><head><title>Android Webcam</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{background:#121212;color:white;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0;padding:20px}h1{margin-bottom:10px}.video-container{width:1920px;max-width:95vw;aspect-ratio:16/9;border:2px solid #333;border-radius:8px;overflow:hidden;box-shadow:0 0 30px rgba(0,0,0,0.5)}iframe{width:100%;height:100%;display:block}.info{margin-top:10px;color:#888;font-size:12px}</style></head><body><h1>Android Webcam View</h1><div class="video-container"><iframe src="/obs" width="1920" height="1080" style="border:none"></iframe></div><p class="info">Mode Biasa (1920x1080 Preview)</p></body></html>
                 """.trimIndent()
                 return newFixedLengthResponse(Response.Status.OK, "text/html", html)
             }
@@ -633,39 +728,17 @@ class MainActivity : AppCompatActivity() {
         private inner class MjpegInputStream : InputStream() {
             private var buffer: ByteArray = ByteArray(0)
             private var index = 0
+            override fun read(): Int { if (index >= buffer.size) loadNextFrame(); return if (index < buffer.size) buffer[index++].toInt() and 0xFF else -1 }
+            override fun read(b: ByteArray, off: Int, len: Int): Int { if (index >= buffer.size) loadNextFrame(); if (index >= buffer.size) return -1; val available = buffer.size - index; val toCopy = Math.min(len, available); System.arraycopy(buffer, index, b, off, toCopy); index += toCopy; return toCopy }
 
-            override fun read(): Int {
-                if (index >= buffer.size) loadNextFrame()
-                return if (index < buffer.size) buffer[index++].toInt() and 0xFF else -1
-            }
-
-            override fun read(b: ByteArray, off: Int, len: Int): Int {
-                if (index >= buffer.size) loadNextFrame()
-                if (index >= buffer.size) return -1
-                val available = buffer.size - index
-                val toCopy = Math.min(len, available)
-                System.arraycopy(buffer, index, b, off, toCopy)
-                index += toCopy
-                return toCopy
-            }
-
-            // FUNGSI INI SUDAH DIPERBAIKI SECARA PERMANEN
             private fun loadNextFrame() {
                 var dataGambar = currentFrame
-
-                // Tunggu sampai frame tersedia
                 while (dataGambar == null) {
-                    try {
-                        Thread.sleep(10)
-                    } catch (e: InterruptedException) {
-                        return // Exit jika interrupted
-                    }
+                    try { Thread.sleep(10) } catch (e: InterruptedException) { return }
                     dataGambar = currentFrame
                 }
 
-                // Sekarang 'dataGambar' pasti tidak null
-                val finalData = dataGambar
-
+                val finalData = dataGambar!!
                 val header = "--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: ${finalData.size}\r\n\r\n"
                 val out = ByteArrayOutputStream()
                 try {
